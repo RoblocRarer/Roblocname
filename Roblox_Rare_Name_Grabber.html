@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roblox Rare Name Grabber</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Arial,Helvetica,sans-serif;
+  background:radial-gradient(circle at top,#20283a 0,#0b0e15 48%,#06070b 100%);
+  color:#fff; display:flex; justify-content:center; padding:35px 16px;
+}
+.app{width:min(1050px,100%);}
+.header{
+  background:rgba(18,22,32,.9); border:1px solid #30384b; border-radius:22px;
+  padding:28px; box-shadow:0 20px 60px #0008;
+}
+.brand{display:flex;align-items:center;gap:15px}
+.logo{
+  width:55px;height:55px;border-radius:15px;display:grid;place-items:center;
+  background:linear-gradient(135deg,#5865f2,#7c4dff);font-size:27px;font-weight:900;
+}
+h1{margin:0;font-size:28px}.sub{margin:6px 0 0;color:#9da7ba}
+.search{display:flex;gap:10px;margin-top:24px}
+select{outline:none} input{
+  flex:1;background:#0b0e15;color:#fff;border:1px solid #343d51;
+  border-radius:13px;padding:16px;font-size:16px;outline:none;
+}
+input:focus{border-color:#6978ff;box-shadow:0 0 0 3px #6978ff22}
+button{
+  border:0;border-radius:13px;padding:0 20px;background:#5865f2;color:white;
+  font-weight:800;cursor:pointer;transition:.15s;font-size:15px;
+}
+button:hover{filter:brightness(1.12);transform:translateY(-1px)}
+button.secondary{background:#242b3b}
+.grid{display:grid;grid-template-columns:1.4fr .8fr;gap:18px;margin-top:18px}
+.card{
+  background:rgba(18,22,32,.9);border:1px solid #30384b;border-radius:20px;
+  padding:22px;box-shadow:0 15px 45px #0005;
+}
+.card h2{margin:0 0 16px;font-size:18px}
+.result{
+  display:flex;align-items:center;justify-content:space-between;gap:15px;
+  background:#0d111a;border:1px solid #30384b;border-radius:15px;padding:17px;margin-top:10px;
+}
+.name{font-weight:800;font-size:17px;word-break:break-all}
+.status{font-size:12px;font-weight:800;padding:7px 10px;border-radius:999px;white-space:nowrap}
+.available{background:#123d2a;color:#65f0a4}.taken{background:#3e1820;color:#ff7182}
+.unknown{background:#3b3215;color:#ffd76a}
+.score{font-size:30px;font-weight:900;margin:5px 0}
+.muted{color:#8d97aa;font-size:13px}
+.bar{height:9px;background:#242b39;border-radius:99px;overflow:hidden;margin:12px 0}
+.fill{height:100%;width:0;background:linear-gradient(90deg,#5865f2,#9b6cff);transition:.5s}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#171d2a;border:1px solid #30384b;border-radius:10px;padding:9px 11px;font-size:13px}
+.list{max-height:300px;overflow:auto}
+.empty{text-align:center;color:#737d91;padding:30px}
+.footer{text-align:center;color:#697386;font-size:12px;margin:18px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.search{flex-direction:column}.search button{height:50px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="header">
+    <div class="brand">
+      <div class="logo">R</div>
+      <div>
+        <h1>Roblox Rare Name Grabber</h1>
+        <div class="sub">Search names, estimate rarity, and keep your favorites.</div>
+      </div>
+    </div>
+    <div class="search">
+      <input id="nameInput" maxlength="20" placeholder="Enter a Roblox username..." autocomplete="off">
+      <button onclick="checkName()">Check Name</button>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
+      <label class="muted" for="nameLength">Generated name length:</label>
+      <select id="nameLength" style="background:#0b0e15;color:#fff;border:1px solid #343d51;border-radius:10px;padding:10px">
+        <option value="3">3 letters</option>
+        <option value="4">4 letters</option>
+        <option value="5">5 letters</option>
+        <option value="6" selected>6 letters</option>
+        <option value="7">7 letters</option>
+        <option value="8">8 letters</option>
+        <option value="9">9 letters</option>
+        <option value="10">10 letters</option>
+        <option value="11">11 letters</option>
+        <option value="12">12 letters</option>
+        <option value="13">13 letters</option>
+        <option value="14">14 letters</option>
+        <option value="15">15 letters</option>
+        <option value="16">16 letters</option>
+        <option value="17">17 letters</option>
+        <option value="18">18 letters</option>
+        <option value="19">19 letters</option>
+        <option value="20">20 letters</option>
+      </select>
+      <button class="secondary" onclick="findAvailable()">Find Real Available Names</button>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Search Result</h2>
+      <div id="result" class="empty">Enter a username to begin.</div>
+    </section>
+
+    <section class="card">
+      <h2>Rarity Analyzer</h2>
+      <div id="score" class="score">—</div>
+      <div id="tier" class="muted">No name checked</div>
+      <div class="bar"><div id="fill" class="fill"></div></div>
+      <div class="chips" id="traits">
+        <div class="chip">Length: —</div>
+        <div class="chip">Numbers: —</div>
+        <div class="chip">Symbols: —</div>
+      </div>
+      <p class="muted" style="margin-top:16px">
+        Rarity is an estimate based on name characteristics. It does not guarantee that a Roblox username is available.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Real Availability Finder</h2>
+      <div class="muted" style="margin-bottom:12px">Checks candidate usernames against Roblox's public username lookup API.</div>
+      <div id="generated" class="list"><div class="empty">Choose a length and click "Find Real Available Names".</div></div>
+      <button style="margin-top:15px;width:100%;height:45px" onclick="findAvailable()">Find Available Names</button>
+    </section>
+
+    <section class="card">
+      <h2>Recent Searches</h2>
+      <div id="history" class="list"><div class="empty">No searches yet.</div></div>
+      <button class="secondary" style="margin-top:12px;height:40px" onclick="clearHistory()">Clear History</button>
+    </section>
+  </div>
+
+  <div class="footer">Roblox Rare Name Grabber • Standalone HTML</div>
+</div>
+
+<script>
+const input=document.getElementById("nameInput");
+input.addEventListener("keydown",e=>{if(e.key==="Enter")checkName()});
+
+function rarity(name){
+  let score=100;
+  const n=name.toLowerCase();
+  const len=name.length;
+  if(len>12) score-=35;
+  else if(len>9) score-=20;
+  else if(len>7) score-=8;
+  if(/[0-9]/.test(name)) score-=12;
+  if(/[^a-zA-Z0-9_]/.test(name)) score-=15;
+  if(/_/.test(name)) score-=7;
+  if(/(.)\1\1/.test(n)) score-=8;
+  if(/^[a-z]+$/.test(name)) score+=5;
+  score=Math.max(1,Math.min(100,score));
+  return Math.round(score);
+}
+function tier(s){
+  if(s>=92)return ["Ultra Rare","#9b6cff"];
+  if(s>=78)return ["Very Rare","#5865f2"];
+  if(s>=60)return ["Rare","#42b883"];
+  if(s>=40)return ["Uncommon","#e0a84b"];
+  return ["Common","#8b93a5"];
+}
+async function realUsernameCheck(names){
+  const response = await fetch("https://users.roblox.com/v1/usernames/users",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Accept":"application/json"},
+    body:JSON.stringify({usernames:names,excludeBannedUsers:false})
+  });
+  if(response.status===429) throw new Error("Roblox rate-limited the checker. Wait a few seconds and try again.");
+  if(!response.ok) throw new Error("Roblox API returned HTTP "+response.status);
+  const json=await response.json();
+  const returned=(json.data||[]);
+  const taken=new Set(returned.map(x=>String(x.requestedUsername || x.name || "").toLowerCase()));
+  return names.map(name=>({name,available:!taken.has(name.toLowerCase())}));
+}
+
+async function checkName(){
+  let name=input.value.trim();
+  if(!name)return;
+  if(!/^[A-Za-z0-9_]{3,20}$/.test(name)){
+    document.getElementById("result").innerHTML='<div class="empty">Username must be 3–20 characters and use only letters, numbers, or underscores.</div>';
+    return;
+  }
+  const scoreVal=rarity(name), t=tier(scoreVal);
+  const result=document.getElementById("result");
+  result.innerHTML='<div class="empty">Checking Roblox...</div>';
+  try{
+    const [checked]=await realUsernameCheck([name]);
+    const cls=checked.available?"available":"taken";
+    const label=checked.available?"AVAILABLE":"TAKEN";
+    result.innerHTML=
+      `<div><div class="name">${escapeHTML(name)}</div><div class="muted">Rarity estimate: ${t[0]}</div></div>
+       <div style="display:flex;gap:8px;align-items:center">
+         <span class="status ${cls}">${label}</span>
+         <button class="secondary" onclick="copyName('${escapeJS(name)}')">Copy</button>
+       </div>`;
+  }catch(err){
+    result.innerHTML=`<div class="empty">Could not reach Roblox right now.<br><span class="muted">${escapeHTML(err.message)}</span></div>`;
+  }
+  document.getElementById("score").textContent=scoreVal+"/100";
+  document.getElementById("tier").textContent=t[0];
+  document.getElementById("fill").style.width=scoreVal+"%";
+  document.getElementById("traits").innerHTML=
+    `<div class="chip">Length: ${name.length}</div>
+     <div class="chip">Numbers: ${(name.match(/[0-9]/g)||[]).length}</div>
+     <div class="chip">Underscores: ${(name.match(/_/g)||[]).length}</div>`;
+  saveHistory(name,scoreVal);
+}
+
+function randomCandidate(length){
+  const consonants="bcdfghjklmnpqrstvwxyz";
+  const vowels="aeiou";
+  let s="";
+  for(let i=0;i<length;i++){
+    if(i%2===0) s+=consonants[Math.floor(Math.random()*consonants.length)];
+    else s+=vowels[Math.floor(Math.random()*vowels.length)];
+  }
+  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+
+async function findAvailable(){
+  const length=Number(document.getElementById("nameLength").value);
+  const out=document.getElementById("generated");
+  out.innerHTML='<div class="empty">Generating candidates and checking Roblox...<br><span class="muted">This may take a moment.</span></div>';
+  const candidates=new Set();
+  let attempts=0;
+  while(candidates.size<100 && attempts<250){
+    candidates.add(randomCandidate(length));
+    attempts++;
+  }
+  try{
+    const names=[...candidates];
+    const checked=await realUsernameCheck(names);
+
+    // Only render names that Roblox did NOT return as existing users.
+    // No "unknown" or "taken" candidates are shown in the results.
+    const available=checked
+      .filter(x=>x.available===true)
+      .sort((a,b)=>rarity(b.name)-rarity(a.name))
+      .slice(0,12);
+
+    if(!available.length){
+      out.innerHTML='<div class="empty">No confirmed available names were found in this batch.<br><span class="muted">Try the search again.</span></div>';
+      return;
+    }
+
+    out.innerHTML='<div class="muted" style="margin-bottom:10px">Only names confirmed as not currently registered are shown.</div>'+
+      available.map(x=>{
+        const s=rarity(x.name), t=tier(s);
+        return `<div class="result">
+          <div>
+            <div class="name">${escapeHTML(x.name)}</div>
+            <div class="muted">${t[0]} • ${s}/100</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="status available">AVAILABLE</span>
+            <button class="secondary" onclick="input.value='${escapeJS(x.name)}';checkName()">Check</button>
+            <button class="secondary" onclick="copyName('${escapeJS(x.name)}')">Copy</button>
+          </div>
+        </div>`;
+      }).join("");
+  }catch(err){
+    out.innerHTML=`<div class="empty">Roblox could not be reached from this browser.<br><span class="muted">If you opened the HTML directly as a file, try hosting it on GitHub Pages or another HTTPS site, then try again.</span><br><button style="margin-top:12px;height:40px" onclick="findAvailable()">Try Again</button></div>`;
+  }
+}
+
+function copyName(name){
+  navigator.clipboard?.writeText(name);
+}
+
+function randomName(){
+  const length=Number(document.getElementById("nameLength").value);
+  input.value=randomCandidate(length);
+  checkName();
+}
+
+function saveHistory(name,s){
+  let h=JSON.parse(localStorage.getItem("rn_history")||"[]");
+  h=h.filter(x=>x.name.toLowerCase()!==name.toLowerCase());
+  h.unshift({name,s});
+  localStorage.setItem("rn_history",JSON.stringify(h.slice(0,20)));
+  renderHistory();
+}
+function renderHistory(){
+  const h=JSON.parse(localStorage.getItem("rn_history")||"[]");
+  const box=document.getElementById("history");
+  if(!h.length){box.innerHTML='<div class="empty">No searches yet.</div>';return}
+  box.innerHTML=h.map(x=>`<div class="result" style="margin-top:8px;padding:12px">
+    <div><div class="name">${escapeHTML(x.name)}</div><div class="muted">Rarity ${x.s}/100</div></div>
+    <button class="secondary" onclick="input.value='${escapeJS(x.name)}';checkName()">Open</button>
+  </div>`).join("");
+}
+function clearHistory(){localStorage.removeItem("rn_history");renderHistory()}
+function escapeHTML(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function escapeJS(s){return s.replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
+renderHistory();
+</script>
+</body>
+</html>
